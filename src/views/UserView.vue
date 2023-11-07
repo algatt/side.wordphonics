@@ -1,85 +1,120 @@
 <template>
-  <div class="user-section">
-    <h1>Word Fun Time!</h1>
-    <div v-if="currentWord" class="word-display">{{ currentWord }}</div>
-    <button class="word-button" @click="showPreviousWord">Previous</button>
-    <button class="word-button" @click="showNextWord">Next</button>
+  <div
+    class="text-3xl font-semibold text-purple-700 pt-6"
+    style="font-family: Montserrat"
+  >
+    Robert Phonics
+  </div>
+  <div v-if="isLoading" class="flex justify-center">
+    <LoadingSpinner></LoadingSpinner>
+  </div>
+  <div v-else class="py-8">
+    <select
+      v-model="selectedFolder"
+      @change="updateImages"
+      class="text-xl w-full focus:outline-none focus:ring-0 py-2 px-2 rounded-lg border-2 border-purple-700 bg-purple-100"
+      style="font-family: Montserrat"
+    >
+      <option :value="null">Select a Date</option>
+      <option
+        v-for="folder in prettyFolderNames"
+        :key="folder.id"
+        :value="folder.id"
+      >
+        {{ folder.formattedDate }}
+      </option>
+    </select>
+
+    <ImageDisplay
+      class="py-8"
+      v-if="selectedFolder && images"
+      :images="images"
+    ></ImageDisplay>
   </div>
 </template>
 
-<script>
-  import { useStore } from "../store";
-  import { ref, computed } from "vue";
+<script setup>
+  import axios from "axios";
+  import { onMounted, ref, computed } from "vue";
+  import ImageDisplay from "../components/ImageDisplay.vue";
+  import LoadingSpinner from "../components/LoadingSpinner.vue";
 
-  export default {
-    setup() {
-      const { words } = useStore();
-      const currentWordIndex = ref(0);
+  const apiKey = import.meta.env.VITE_DRIVE_API_KEY;
+  const folderId = import.meta.env.VITE_DRIVE_FOLDER_ID;
+  const folders = ref(null);
+  const isLoading = ref(true);
+  const selectedFolder = ref(null);
+  const images = ref(null);
 
-      const currentWord = computed(() => words.value[currentWordIndex.value]);
+  const url = `https://www.googleapis.com/drive/v3/files`;
 
-      function showNextWord() {
-        if (currentWordIndex.value < words.value.length - 1) {
-          currentWordIndex.value += 1;
-        }
-      }
+  const prettyFolderNames = computed(() => {
+    if (!folders.value || !folders.value.files) return [];
+    return folders.value.files.map((el) => {
+      const dateString = el.name;
 
-      function showPreviousWord() {
-        if (currentWordIndex.value > 0) {
-          currentWordIndex.value -= 1;
-        }
-      }
-
+      const year = dateString.substring(0, 4);
+      const month = dateString.substring(4, 6);
+      const day = dateString.substring(6, 8);
+      const date = new Date(year, month - 1, day);
+      const formattedDate = date.toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+      });
       return {
-        currentWord,
-        showNextWord,
-        showPreviousWord,
+        ...el,
+        formattedDate: formattedDate,
       };
-    },
-  };
-</script>
+    });
+  });
 
-<style scoped>
-  .user-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    text-align: center;
-  }
+  const getFolderNames = async (parentFolderId) => {
+    const params = {
+      q: `'${parentFolderId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+      fields: "files(id, name)",
+      key: apiKey,
+    };
 
-  .word-display {
-    font-size: 2em; /* Large text for easy reading */
-    margin: 20px 0;
-    padding: 10px;
-    background-color: #a2d2ff; /* Light blue background */
-    border-radius: 10px;
-    min-height: 100px; /* Ensures the div retains its shape even if empty */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .word-button {
-    background-color: #ffb703; /* Bright, kid-friendly button color */
-    border: none;
-    border-radius: 5px;
-    padding: 10px 20px;
-    font-size: 1.5em;
-    margin: 10px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-
-  .word-button:hover {
-    background-color: #ff9f1c; /* Slightly darker on hover */
-  }
-
-  /* Mobile responsiveness */
-  @media (max-width: 768px) {
-    .word-display {
-      font-size: 1.5em; /* Smaller font on smaller devices */
+    try {
+      const response = await axios.get(url, { params });
+      return response.data;
+    } catch (error) {
+      console.log(error);
     }
-  }
-</style>
+  };
+
+  const getImageFiles = async (folderId) => {
+    const imageMimeTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/bmp",
+      "image/gif",
+    ];
+    const mimeTypeQuery = imageMimeTypes
+      .map((type) => `mimeType='${type}'`)
+      .join(" or ");
+    const query = `'${folderId}' in parents and (${mimeTypeQuery}) and trashed=false`;
+    const params = {
+      q: query,
+      fields: "files(id, name, mimeType, thumbnailLink, webContentLink)", // Add 'thumbnailLink' to get the thumbnail URL of the images
+      key: apiKey,
+    };
+
+    try {
+      const response = await axios.get(url, { params });
+      return response.data.files; // this will be an array of image files
+    } catch (error) {
+      console.error("Error fetching image files:", error);
+      throw error; // re-throw the error to be handled by the caller
+    }
+  };
+
+  const updateImages = async () => {
+    images.value = await getImageFiles(selectedFolder.value);
+  };
+
+  onMounted(async () => {
+    folders.value = await getFolderNames(folderId); // await the async function call
+    isLoading.value = false;
+  });
+</script>

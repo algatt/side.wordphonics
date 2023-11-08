@@ -82,7 +82,6 @@
       response.data.files = response.data.files.sort((a, b) => {
         return a.name > b.name ? 1 : -1;
       });
-      console.log(response.data);
       return response.data;
     } catch (error) {
       console.log(error);

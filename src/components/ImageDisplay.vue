@@ -84,6 +84,7 @@
         return el.webContentLink;
       });
       preLoadedImages.value = await preloadImages(links);
+      currentPosition.value = 0;
       isLoading.value = false;
     }
   });

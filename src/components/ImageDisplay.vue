@@ -10,7 +10,7 @@
           width="400"
         />
       </span>
-      <span class="flex justify-center space-x-3">
+      <span class="flex justify-center space-x-3 pt-10">
         <button
           :disabled="currentPosition === 0"
           @click="currentPosition > 0 ? currentPosition-- : null"

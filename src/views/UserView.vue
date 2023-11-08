@@ -27,7 +27,7 @@
 
     <ImageDisplay
       :key="refreshKey"
-      class="py-8"
+      class="pt-8"
       v-if="selectedFolder && images"
       :images="images"
     ></ImageDisplay>

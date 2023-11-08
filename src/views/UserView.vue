@@ -26,6 +26,7 @@
     </select>
 
     <ImageDisplay
+      :key="refreshKey"
       class="py-8"
       v-if="selectedFolder && images"
       :images="images"
@@ -45,6 +46,7 @@
   const isLoading = ref(true);
   const selectedFolder = ref(null);
   const images = ref(null);
+  const refreshKey = ref(0);
 
   const url = `https://www.googleapis.com/drive/v3/files`;
 
@@ -77,6 +79,10 @@
 
     try {
       const response = await axios.get(url, { params });
+      response.data.files = response.data.files.sort((a, b) => {
+        return a.name > b.name ? 1 : -1;
+      });
+      console.log(response.data);
       return response.data;
     } catch (error) {
       console.log(error);
@@ -111,6 +117,7 @@
 
   const updateImages = async () => {
     images.value = await getImageFiles(selectedFolder.value);
+    refreshKey.value++;
   };
 
   onMounted(async () => {

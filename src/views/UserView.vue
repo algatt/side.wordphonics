@@ -1,9 +1,6 @@
 <template>
-  <div
-    class="text-3xl font-semibold text-purple-700 pt-6"
-    style="font-family: Montserrat"
-  >
-    Robert Phonics
+  <div class="flex justify-center items-center">
+    <img :src="logo" class="w-[400px]" />
   </div>
   <div v-if="isLoading" class="flex justify-center">
     <LoadingSpinner></LoadingSpinner>
@@ -39,6 +36,7 @@
   import { onMounted, ref, computed } from "vue";
   import ImageDisplay from "../components/ImageDisplay.vue";
   import LoadingSpinner from "../components/LoadingSpinner.vue";
+  import logo from "../assets/logo.png";
 
   const apiKey = import.meta.env.VITE_DRIVE_API_KEY;
   const folderId = import.meta.env.VITE_DRIVE_FOLDER_ID;

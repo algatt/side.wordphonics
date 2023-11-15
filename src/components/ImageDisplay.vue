@@ -1,16 +1,29 @@
 <template>
-  <div class="flex flex-col space-y-4">
+  <div class="flex flex-col space-y-4 items-center">
     <div v-if="isLoading" class="flex justify-center">
       <LoadingSpinner></LoadingSpinner>
     </div>
+
     <template v-if="!isLoading">
-      <span>
+      <span
+        class="flex max-w-[400px] max-h-[200px] w-full h-full min-w-[400px] min-h-[200px]"
+      >
         <img
           :src="preLoadedImages[sequence[currentPosition]].src"
-          width="400"
+          class="object-contain w-[100%]"
         />
       </span>
-      <span class="flex justify-center space-x-3 pt-10">
+
+      <span class="flex h-10 items-center relative w-[300px]">
+        <span class="w-full h-1 bg-purple-200 left-0 top-0 absolute"></span>
+
+        <span
+          class="h-1 bg-purple-500 left-0 top-0 w-20 absolute"
+          :style="`width: ${((currentPosition + 1) / totalSelection) * 100}%`"
+        ></span>
+      </span>
+
+      <span class="flex justify-center space-x-3">
         <button
           :disabled="currentPosition === 0"
           @click="currentPosition > 0 ? currentPosition-- : null"
@@ -27,18 +40,23 @@
         >
           Next
         </button>
-      </span></template
-    >
+      </span>
+
+      <span class="text-purple-500 text-sm mt-2"
+        >{{ totalSelection }} cards</span
+      >
+    </template>
   </div>
 </template>
 
 <script setup>
   import { ref, computed, onMounted } from "vue";
   import LoadingSpinner from "./LoadingSpinner.vue";
-  const props = defineProps(["images"]);
+  const props = defineProps(["images", "totalCards"]);
   const currentPosition = ref(0);
   const preLoadedImages = ref([]);
   const isLoading = ref(true);
+  const totalSelection = ref(0);
 
   const shuffleArray = (array) => {
     for (let i = array.length - 1; i > 0; i--) {
@@ -55,7 +73,7 @@
 
   const sequence = computed(() => {
     if (!props.images) return null;
-    const sequence = createRandomOrderArray(props.images.length);
+    const sequence = createRandomOrderArray(totalSelection.value);
     return shuffleArray(sequence);
   });
 
@@ -83,7 +101,24 @@
       const links = props.images.map((el) => {
         return el.webContentLink;
       });
-      preLoadedImages.value = await preloadImages(links);
+
+      if (props.totalCards) {
+        if (props.totalCards > links.length)
+          totalSelection.value = links.length;
+        else totalSelection.value = props.totalCards;
+      } else {
+        totalSelection.value = props.images.length;
+      }
+
+      const picks = createRandomOrderArray(props.images.length);
+
+      const tempLinks = [];
+      picks.forEach((val) => {
+        tempLinks.push(links[val]);
+      });
+
+      preLoadedImages.value = await preloadImages(tempLinks);
+
       currentPosition.value = 0;
       isLoading.value = false;
     }

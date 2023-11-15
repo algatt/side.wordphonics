@@ -13,6 +13,7 @@
       style="font-family: Montserrat"
     >
       <option :value="null">Select a Date</option>
+      <option value="__all__">All Folders</option>
       <option
         v-for="folder in prettyFolderNames"
         :key="folder.id"
@@ -22,12 +23,27 @@
       </option>
     </select>
 
-    <ImageDisplay
-      :key="refreshKey"
-      class="pt-8"
-      v-if="selectedFolder && images"
-      :images="images"
-    ></ImageDisplay>
+    <div v-if="showAll === 'no'" class="flex flex-col items-center w-full">
+      <ImageDisplay
+        :key="refreshKey"
+        class="pt-8"
+        v-if="selectedFolder && images"
+        :images="images"
+      ></ImageDisplay>
+    </div>
+    <div v-else class="flex flex-col items-center w-full">
+      <LoadingSpinner
+        v-if="showAll === 'loading'"
+        class="mt-6"
+      ></LoadingSpinner>
+      <ImageDisplay
+        v-else
+        :key="refreshKey"
+        class="pt-8"
+        :images="images"
+        :total-cards="25"
+      ></ImageDisplay>
+    </div>
   </div>
 </template>
 
@@ -45,22 +61,53 @@
   const selectedFolder = ref(null);
   const images = ref(null);
   const refreshKey = ref(0);
+  const showAll = ref("no");
 
   const url = `https://www.googleapis.com/drive/v3/files`;
+
+  const getAllFiles = async (parentFolderId) => {
+    const params = {
+      q: `'${parentFolderId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+      fields: "files(id, name)",
+      key: apiKey,
+    };
+
+    try {
+      const images = [];
+      const response = await axios.get(url, { params });
+      response.data.files = response.data.files.sort((a, b) => {
+        return a.name > b.name ? 1 : -1;
+      });
+      const content = response.data.files;
+
+      for (const item of content) {
+        images.push(...(await getImageFiles(item.id)));
+      }
+
+      return images;
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const prettyFolderNames = computed(() => {
     if (!folders.value || !folders.value.files) return [];
     return folders.value.files.map((el) => {
       const dateString = el.name;
 
+      let formattedDate = el.name;
+
       const year = dateString.substring(0, 4);
       const month = dateString.substring(4, 6);
       const day = dateString.substring(6, 8);
       const date = new Date(year, month - 1, day);
-      const formattedDate = date.toLocaleDateString("en-US", {
+      formattedDate = date.toLocaleDateString("en-US", {
         month: "long",
         day: "numeric",
       });
+
+      if (formattedDate === "Invalid Date") formattedDate = el.name;
+
       return {
         ...el,
         formattedDate: formattedDate,
@@ -113,12 +160,23 @@
   };
 
   const updateImages = async () => {
-    images.value = await getImageFiles(selectedFolder.value);
+    if (!selectedFolder.value) {
+      images.value = null;
+      showAll.value = "no";
+    } else if (selectedFolder.value === "__all__") {
+      showAll.value = "loading";
+      images.value = await getAllFiles(folderId);
+      showAll.value = "yes";
+    } else {
+      images.value = await getImageFiles(selectedFolder.value);
+      showAll.value == "no";
+    }
     refreshKey.value++;
   };
 
   onMounted(async () => {
     folders.value = await getFolderNames(folderId); // await the async function call
     isLoading.value = false;
+    // console.log(await getAllFiles(folderId));
   });
 </script>

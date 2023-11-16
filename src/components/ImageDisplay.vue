@@ -6,7 +6,7 @@
 
     <template v-if="!isLoading">
       <span
-        class="flex max-w-[400px] max-h-[200px] w-full h-full min-w-[400px] min-h-[200px]"
+        class="flex lg:max-w-[400px] max-w-[200px] max-h-[200px] w-full h-full min-w-[200px] lg:min-w-[400px] min-h-[200px]"
       >
         <img
           :src="preLoadedImages[sequence[currentPosition]].src"
@@ -21,6 +21,13 @@
           class="h-1 bg-purple-500 left-0 top-0 w-20 absolute"
           :style="`width: ${((currentPosition + 1) / totalSelection) * 100}%`"
         ></span>
+        <img
+          :src="happy"
+          class="w-6 h-6 absolute top-[-9px]"
+          :style="`left : ${
+            ((currentPosition + 1) / totalSelection) * 100 - 5
+          }%;`"
+        />
       </span>
 
       <span class="flex justify-center space-x-3">
@@ -52,6 +59,8 @@
 <script setup>
   import { ref, computed, onMounted } from "vue";
   import LoadingSpinner from "./LoadingSpinner.vue";
+  import happy from "../assets/happy.png";
+
   const props = defineProps(["images", "totalCards"]);
   const currentPosition = ref(0);
   const preLoadedImages = ref([]);

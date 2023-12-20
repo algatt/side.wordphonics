@@ -85,7 +85,7 @@
 
   onMounted(async () => {
     settings.value = loadSettings();
-    console.log(settings.value);
+
     allFolders.value = await getAllFolders(
       null,
       settings.value["Sorting"]["Sort By"].selectedValue,

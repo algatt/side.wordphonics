@@ -162,6 +162,7 @@ export const loadSettings = () => {
   let settings = localStorage.getItem("phonics-settings");
   if (!settings) settings = PHONICS_SETTINGS;
   else settings = JSON.parse(settings);
+  if (!settings.Animation) settings.Animation = PHONICS_SETTINGS.Animation;
   localStorage.setItem("phonics-settings", JSON.stringify(settings));
   return settings;
 };

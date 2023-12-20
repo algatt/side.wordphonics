@@ -46,4 +46,13 @@ export const PHONICS_SETTINGS = {
       availableValues: generateAvailableQuestions(),
     },
   },
+  Animation: {
+    "Enable Animation": {
+      selectedValue: true,
+      availableValues: [
+        { display: "Yes", value: true },
+        { display: "No", value: false },
+      ],
+    },
+  },
 };

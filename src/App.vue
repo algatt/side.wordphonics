@@ -18,14 +18,77 @@
       </button>
     </div>
   </div>
+
+  <div
+    v-if="
+      route.name === 'User' &&
+      settings &&
+      settings.Animation['Enable Animation'].selectedValue === true &&
+      showSurprise !== null
+    "
+    class="absolute bottom-[40px] left-0 right-0"
+  >
+    <img
+      :src="surprise[showSurprise]"
+      class="relative w-[200px] slide-right hover:rotate-12"
+    />
+  </div>
 </template>
 
 <script setup>
-  import { ref } from "vue";
+  import { onMounted, ref } from "vue";
+  import { useRoute } from "vue-router";
+  import { loadSettings } from "./utilities";
   import background01 from "./assets/background_01.jpg";
   import background02 from "./assets/background_02.jpg";
   import background03 from "./assets/background_03.jpg";
 
+  import surprise01 from "./assets/unicorn/star.png";
+  import surprise02 from "./assets/unicorn/unicorn.png";
+  import surprise03 from "./assets/unicorn/unicorn_mermaid.png";
+  import surprise04 from "./assets/unicorn/cat.png";
+  import surprise05 from "./assets/unicorn/dog.png";
+
+  const route = useRoute();
+
   const selectedBackground = ref(background01);
   const backgrounds = ref([background01, background02, background03]);
+  const surprise = ref([
+    surprise01,
+    surprise02,
+    surprise03,
+    surprise04,
+    surprise05,
+  ]);
+  const settings = ref(null);
+
+  const showSurprise = ref(null);
+
+  const toggleSurprise = () => {
+    if (Math.random() < 0.5) showSurprise.value = Math.floor(Math.random() * 5);
+    else showSurprise.value = null;
+  };
+
+  onMounted(() => {
+    settings.value = loadSettings();
+
+    setInterval(() => toggleSurprise(), 10000);
+  });
 </script>
+
+<style>
+  @keyframes slideRight {
+    from {
+      left: 5%;
+      visibility: visible;
+    }
+    to {
+      left: calc(95% - 200px);
+      visibility: hidden;
+    }
+  }
+
+  .slide-right {
+    animation: slideRight 5s forwards ease;
+  }
+</style>

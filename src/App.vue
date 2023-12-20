@@ -72,7 +72,7 @@
   onMounted(() => {
     settings.value = loadSettings();
 
-    setInterval(() => toggleSurprise(), 10000);
+    setInterval(() => toggleSurprise(), 30000);
   });
 </script>
 

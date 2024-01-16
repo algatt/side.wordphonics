@@ -76,7 +76,7 @@
     } else images.value = await getImageFiles(selectedFolder.value);
 
     const links = images.value.map((el) => {
-      return el.webContentLink;
+      return el.thumbnailLink;
     });
     displayImages.value = await preloadImages(links);
     refreshKey.value++;

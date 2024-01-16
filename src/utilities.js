@@ -140,6 +140,8 @@ export const getRandomFolders = (folders, count) => {
 };
 
 export const preloadImages = async (links) => {
+  const img = new Image();
+
   const promises = links.map(
     (link) =>
       new Promise((resolve, reject) => {
